@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="bootstrap.css">
+    <title>表格拖拽</title>
+    <style>
+        .container {
+            width: 600px;
+            height: 500px;
+            margin: 100px auto;
+        }
+
+        .bg-info {
+            background-color: aquamarine;
+        }
+
+    </style>
+</head>
+
+<body>
+
+
+    <div class="container">
+        <table class="table table-bordered">
+            <caption>支持列拖拽的表格</caption>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Username</th>
+                    <th>Gender</th>
+                    <th>phone</th>
+                    <th>班级</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th scope="row">1</th>
+                    <td>Mark</td>
+                    <td>Otto</td>
+                    <td>@mdo</td>
+                    <td>male</td>
+                    <td>134234244</td>
+                    <td>前端27</td>
+
+                </tr>
+                <tr>
+                    <th scope="row">2</th>
+                    <td>Jacob</td>
+                    <td>Thornton</td>
+                    <td>@fat</td>
+                    <td>Female</td>
+                    <td>13423353</td>
+                    <td>前端27</td>
+                </tr>
+                <tr>
+                    <th scope="row">3</th>
+                    <td>Larry</td>
+                    <td>the Bird</td>
+                    <td>@twitter</td>
+                    <td>Male</td>
+                    <td>134234209</td>
+                    <td>前端27</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+</body>
+
+</html>
+
+<script>
+    /* 1, 无论是从左向右拖拽,还是从右向左拖拽,定义[左边]永远是[前]面. 
+     * 2, 本tools额外重复定义了名叫bg-info的样式类,以防止未引入bootstrap导致报错。
+     * 3, 本tool涉及classList对象、draggable属性、ondragstart，ondragover，ondrop等事件、
+     *    DOM操作方法insertBefore
+     */ 
+
+    //为所有表头单元格设置draggable=true属性
+    var table = document.querySelector('table');
+
+    //表体对象
+    var tbody = document.querySelector('tbody');
+
+    //获取所有表头单元格
+    var tr = document.querySelector('thead>tr');
+
+    //所有表头内的单元格集合
+    var thList = document.getElementsByTagName("th");
+
+    var thDragged = null;  //当前被拖拽的表头单元格
+    var indexCurrent = 0; //当前被拖拽表头单元格的序号
+
+    for (var i = 1; i < thList.length; i++) {   //[序号]列一般是位于第0列,将其排除在外,是确保[序号]列不可拖拽,更符号实现应用.
+        //给表头单元格设置draggable = true.
+        thList[i].draggable = true;
+        //注册[开始拖拽]事件以获取当前事件源
+        thList[i].ondragstart = function () {
+            //将被拖拽的th对象传递至全局环境以供调用
+            thDragged = this;
+            indexCurrent = this.cellIndex;
+        }
+    }
+
+
+    //注册[ondragover]事件并阻止其默认行为
+    tr.ondragover = function (e) {
+        var thRed = document.getElementsByClassName('bg-info');
+        //请留意数组的长度变化,恢复之前变色的单元格
+        for (var i = 0; i < thRed.length; i) {
+            thRed[i].classList.remove('bg-info');
+        }
+        e = e || window.event;
+        e.preventDefault();
+        //给当前单元格添加bootstrap之bg-info样式类.
+        if (e.target != thDragged)
+            e.target.classList.add('bg-info');
+    }
+
+
+    //注册[ondrop]事件
+    tr.ondrop = function (e) {
+        var thTarget = e.target;
+        var indexTarget = thTarget.cellIndex;
+        if (thTarget != tr.children[0]) {   //因为第1列一般为序号列,故其前面不可插入新列.
+            tr.insertBefore(thDragged, thTarget);
+            for (var i = 0; i < tbody.children.length; i++) {
+                //依据被拖拽单元格、目标单元格的索引值，依次循环将数据列insertBefor过去。
+                tbody.children[i].insertBefore(tbody.children[i].children[indexCurrent], tbody.children[i].children[indexTarget]);
+            }
+        }
+        //恢复最后目标单元格的背景颜色.
+        e.target.classList.remove('bg-info');
+    }
+
+</script>
